@@ -1,0 +1,46 @@
+<div class="page-container">
+    <nav class="navbar">
+      <div class="logo">
+        <img src="https://placehold.co/200x50" alt="Logo">
+      </div>
+    </nav>
+
+    <div class="content">
+      <div class="form-container">
+        <h1>Create Room</h1>
+        
+        <div class="form-group">
+          <label>Room Type</label>
+          <div class="radio-group">
+            <label>
+              <input type="radio" [(ngModel)]="roomType" name="roomType" value="public">
+              Public
+            </label>
+            <label>
+              <input type="radio" [(ngModel)]="roomType" name="roomType" value="private">
+              Private
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Format</label>
+          <select [(ngModel)]="selectedFormat">
+            <option [value]="GameFormat.STANDARD">Standard</option>
+            <option [value]="GameFormat.GLC">GLC</option>
+            <option [value]="GameFormat.EXPANDED">Expanded</option>
+            <option [value]="GameFormat.OTHER">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group" *ngIf="selectedFormat === GameFormat.OTHER">
+          <label>Custom Format Name</label>
+          <input type="text" [(ngModel)]="customFormatName" placeholder="Enter format name">
+        </div>
+
+        <button class="create-button" (click)="createRoom()">
+          Create Room
+        </button>
+      </div>
+    </div>
+  </div>

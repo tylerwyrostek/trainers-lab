@@ -1,0 +1,96 @@
+.page-container {
+      min-height: 100vh;
+      background: #f0f0f0;
+    }
+
+    .navbar {
+      background: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .logo {
+      height: 50px;
+    }
+
+    .logo img {
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100vh - 82px);
+      padding: 2rem;
+    }
+
+    .form-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    h1 {
+      margin: 0 0 2rem;
+      color: #333;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #333;
+      font-weight: bold;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .radio-group label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: normal;
+      cursor: pointer;
+    }
+
+    select, input[type="text"] {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    select:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+
+    .create-button {
+      width: 100%;
+      padding: 1rem;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .create-button:hover {
+      background: #2980b9;
+    }
