@@ -70,6 +70,14 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('deviceChange', ({ matchId }) => {
+        const match = matches.get(matchId);
+        if (match) {
+            const peer = match.peer1 === socket.id ? match.peer2 : match.peer1;
+            io.to(peer).emit('peerDeviceChange', { matchId });
+        }
+    });
+
     socket.on('disconnect', () => {
         queue.delete(socket.id);
         // Notify peers if in a match

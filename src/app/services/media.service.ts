@@ -1,6 +1,11 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
+
+export interface MediaDevice {
+  deviceId: string;
+  label: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -8,16 +13,18 @@ import { io, Socket } from 'socket.io-client';
 export class MediaService {
   private localStream = new BehaviorSubject<MediaStream | null>(null);
   private remoteStream = new BehaviorSubject<MediaStream | null>(null);
-  private availableDevices = new BehaviorSubject<MediaDeviceInfo[]>([]);
   private socket: Socket;
 
   localStream$ = this.localStream.asObservable();
   remoteStream$ = this.remoteStream.asObservable();
-  availableDevices$ = this.availableDevices.asObservable();
   private peerConnection: RTCPeerConnection | null = null;
   public isInQueue = new BehaviorSubject<boolean>(false);
   public isMatched = new BehaviorSubject<boolean>(false);
   private currentMatchId: string | null = null;
+  private isUpdatingDevice = false;
+
+  private videoInputDevices = new BehaviorSubject<MediaDevice[]>([]);
+  private audioInputDevices = new BehaviorSubject<MediaDevice[]>([]);
 
   private configuration: RTCConfiguration = {
     iceServers: [
@@ -32,61 +39,80 @@ export class MediaService {
     this.setupSocketListeners();
   }
 
-  async initializeMedia() {
+  private async initializeMedia() {
     try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      
+      const videoDevices = devices
+        .filter(device => device.kind === 'videoinput')
+        .map(device => ({
+          deviceId: device.deviceId,
+          label: device.label || `Camera ${this.videoInputDevices.value.length + 1}`
+        }));
+      
+      const audioDevices = devices
+        .filter(device => device.kind === 'audioinput')
+        .map(device => ({
+          deviceId: device.deviceId,
+          label: device.label || `Microphone ${this.audioInputDevices.value.length + 1}`
+        }));
+
+      this.videoInputDevices.next(videoDevices);
+      this.audioInputDevices.next(audioDevices);
+    } catch (error) {
+      console.error('Error enumerating devices:', error);
+    }
+  }
+
+  public async startLocalStream(videoDeviceId?: string, audioDeviceId?: string): Promise<void> {
+    try {
+      if (this.localStream.value) {
+        this.stopLocalStream();
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
+        video: videoDeviceId ? { deviceId: { exact: videoDeviceId } } : true,
+        audio: audioDeviceId ? { deviceId: { exact: audioDeviceId } } : true
       });
+
       this.localStream.next(stream);
-      await this.updateAvailableDevices();
     } catch (error) {
       console.error('Error accessing media devices:', error);
+      throw error;
     }
   }
 
-  async updateAvailableDevices() {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    this.availableDevices.next(devices);
-  }
-
-  async changeAudioInput(deviceId: string) {
-    const currentStream = this.localStream.value;
-    if (currentStream) {
-      currentStream.getAudioTracks().forEach(track => track.stop());
-      const newStream = await navigator.mediaDevices.getUserMedia({
-        audio: { deviceId: { exact: deviceId } },
-        video: currentStream.getVideoTracks()[0].getSettings()
-      });
-      const videoTrack = currentStream.getVideoTracks()[0];
-      const audioTrack = newStream.getAudioTracks()[0];
-      const combinedStream = new MediaStream([videoTrack, audioTrack]);
-      this.localStream.next(combinedStream);
+  public stopLocalStream(): void {
+    if (this.localStream.value) {
+      this.localStream.value.getTracks().forEach(track => track.stop());
+      this.localStream.next(null);
     }
   }
 
-  async changeVideoInput(deviceId: string) {
-    const currentStream = this.localStream.value;
-    if (currentStream) {
-      currentStream.getVideoTracks().forEach(track => track.stop());
-      const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { deviceId: { exact: deviceId } },
-        audio: currentStream.getAudioTracks()[0].getSettings()
-      });
-      const audioTrack = currentStream.getAudioTracks()[0];
-      const videoTrack = newStream.getVideoTracks()[0];
-      const combinedStream = new MediaStream([videoTrack, audioTrack]);
-      this.localStream.next(combinedStream);
+  public async changeAudioInput(deviceId: string): Promise<void> {
+    this.isUpdatingDevice = true;
+    try {
+      await this.startLocalStream(this.getCurrentVideoDevice()?.deviceId, deviceId);
+      await this.updatePeerConnection();
+      if (this.currentMatchId) {
+        this.socket.emit('deviceChange', { matchId: this.currentMatchId });
+      }
+    } finally {
+      this.isUpdatingDevice = false;
     }
   }
 
-  cleanup() {
-    const stream = this.localStream.value;
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+  public async changeVideoInput(deviceId: string): Promise<void> {
+    this.isUpdatingDevice = true;
+    try {
+      await this.startLocalStream(deviceId, this.getCurrentAudioDevice()?.deviceId);
+      await this.updatePeerConnection();
+      if (this.currentMatchId) {
+        this.socket.emit('deviceChange', { matchId: this.currentMatchId });
+      }
+    } finally {
+      this.isUpdatingDevice = false;
     }
-    this.localStream.next(null);
-    this.remoteStream.next(null);
   }
 
   public enterQueue(): void {
@@ -226,10 +252,41 @@ export class MediaService {
       await this.handleIceCandidate(candidate);
     });
 
+    this.socket.on('peerDeviceChange', async ({ matchId }) => {
+      if (this.currentMatchId !== matchId || this.isUpdatingDevice) return;
+      // Renegotiate connection when peer changes device
+      if (this.peerConnection?.signalingState === 'stable') {
+        const offer = await this.createOffer();
+        this.socket.emit('offer', { matchId, offer });
+      }
+    });
+
     this.socket.on('peerDisconnected', ({ matchId }) => {
       if (this.currentMatchId === matchId) {
         this.handlePeerDisconnect();
       }
     });
+  }
+
+  private getCurrentVideoDevice(): MediaDevice | undefined {
+    const videoTrack = this.localStream.value?.getVideoTracks()[0];
+    return this.videoInputDevices.value.find(
+      device => device.deviceId === videoTrack?.getSettings().deviceId
+    );
+  }
+
+  private getCurrentAudioDevice(): MediaDevice | undefined {
+    const audioTrack = this.localStream.value?.getAudioTracks()[0];
+    return this.audioInputDevices.value.find(
+      device => device.deviceId === audioTrack?.getSettings().deviceId
+    );
+  }
+
+  public getVideoInputDevices(): Observable<MediaDevice[]> {
+    return this.videoInputDevices.asObservable();
+  }
+
+  public getAudioInputDevices(): Observable<MediaDevice[]> {
+    return this.audioInputDevices.asObservable();
   }
 }

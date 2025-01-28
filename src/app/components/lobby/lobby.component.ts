@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MediaService } from '../../services/media.service';
+import { MediaService, MediaDevice } from '../../services/media.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-lobby',
@@ -12,29 +13,59 @@ import { MediaService } from '../../services/media.service';
 export class LobbyComponent implements OnInit, OnDestroy {
   localStream: MediaStream | null = null;
   remoteStream: MediaStream | null = null;
-  audioDevices: MediaDeviceInfo[] = [];
-  videoDevices: MediaDeviceInfo[] = [];
+  audioDevices: MediaDevice[] = [];
+  videoDevices: MediaDevice[] = [];
   localStreamExpanded = false;
   showSettings = false;
+  isInQueue = false;
+  isMatched = false;
+  private subscriptions: Subscription[] = [];
 
 
   constructor(private mediaService: MediaService) {
-    this.mediaService.localStream$.subscribe(
-      stream => this.localStream = stream
-    );
-    this.mediaService.remoteStream$.subscribe(
-      stream => this.remoteStream = stream
-    );
-    this.mediaService.availableDevices$.subscribe(devices => {
-      this.audioDevices = devices.filter(d => d.kind === 'audioinput');
-      this.videoDevices = devices.filter(d => d.kind === 'videoinput');
-    });
+
+
+
 
   }
 
-  async ngOnInit() {
-    await this.mediaService.initializeMedia();
+  ngOnInit() {
+    this.subscriptions.push(
+      this.mediaService.localStream$.subscribe(
+        stream => this.localStream = stream
+      ),
+      this.mediaService.remoteStream$.subscribe(
+        stream => this.remoteStream = stream
+      ),
+      this.mediaService.getVideoInputDevices().subscribe(
+        devices => this.videoDevices = devices
+      ),
+      this.mediaService.getAudioInputDevices().subscribe(
+        devices => this.audioDevices = devices
+      ),
+      this.mediaService.isInQueue.subscribe(
+        inQueue => this.isInQueue = inQueue
+      ),
+      this.mediaService.isMatched.subscribe(
+        matched => this.isMatched = matched
+      )
+    );
+
+    this.startStream();
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.mediaService.stopLocalStream();
     this.mediaService.leaveQueue();
+  }
+
+  async startStream() {
+    try {
+      await this.mediaService.startLocalStream();
+    } catch (error) {
+      console.error('Failed to start stream:', error);
+    }
   }
 
   async onAudioDeviceChange(event: Event) {
@@ -63,9 +94,5 @@ export class LobbyComponent implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     // TODO: Implement chat functionality
     input.value = '';
-  }
-
-  ngOnDestroy() {
-    this.mediaService.cleanup();
   }
 }
