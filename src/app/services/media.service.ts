@@ -27,7 +27,7 @@ export class MediaService {
   };
 
   constructor() {
-    this.socket = io('http://localhost:3000');
+    this.socket = io('https://trainers-lab-api.onrender.com/');
     this.initializeMedia();
     this.setupSocketListeners();
   }
