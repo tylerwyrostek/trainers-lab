@@ -12,7 +12,7 @@
           [class.expanded]="localStreamExpanded"
           (click)="toggleLocalStream()"
         >
-          <video #localVideo [srcObject]="localStream" autoplay muted></video>
+          <video #localVideo [srcObject]="localStream" autoplay [muted]="true"></video>
           <p>You</p>
         </div>
       </div>
