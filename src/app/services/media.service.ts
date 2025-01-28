@@ -76,7 +76,7 @@ export class MediaService {
       });
 
       this.localStream.next(stream);
-      await this.setupPeerConnection();
+      
     } catch (error) {
       console.error('Error accessing media devices:', error);
       throw error;
@@ -136,7 +136,7 @@ export class MediaService {
     }
 
     this.peerConnection = new RTCPeerConnection(this.configuration);
-    
+    await this.startLocalStream();
     if (this.localStream.value) {
       this.localStream.value.getTracks().forEach(track => {
         if (this.localStream.value) {
@@ -232,7 +232,7 @@ export class MediaService {
       this.isInQueue.next(false);
       this.isMatched.next(true);
 
-      await this.startLocalStream();
+      await this.setupPeerConnection();
       
       if (initiator) {
         const offer = await this.createOffer();
