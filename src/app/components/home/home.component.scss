@@ -1,21 +1,6 @@
 .page-container {
     min-height: 100vh;
-    background: #f0f0f0;
-  }
-
-  .navbar {
-    background: white;
-    padding: 1rem 2rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-
-  .logo {
-    height: 50px;
-  }
-
-  .logo img {
-    height: 100%;
-    object-fit: contain;
+    background-color: #121212;
   }
 
   .content {
@@ -34,9 +19,17 @@
     width: 100%;
   }
 
+  .button-text {
+    position: absolute;
+    bottom: 5%;
+    width: 100%;
+    left: 0%;
+    color: white;
+  }
+
   .action-button {
     flex: 1;
-    max-width: 300px;
+    width: 500px;
     height: 200px;
     background: white;
     border: none;
@@ -47,6 +40,24 @@
     color: #333;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+
+  .casual {
+    background-image: url('../../../assets/images/blastoise.png');
+    background-size: cover;
+    background-repeat:no-repeat;
+  }
+  .ranked {
+    background-image: url('../../../assets/images/gardevoir.png');
+    background-size: cover;
+    background-repeat:no-repeat;
+  }
+
+  .create-room {
+    background-image: url('../../../assets/images/darkrai.png');
+    background-size: cover;
+    background-repeat:no-repeat;
   }
 
   .action-button:hover {

@@ -29,3 +29,18 @@ select {
 .queue-status {
   margin: 20px 0;
 }
+
+.navbar {
+  background: #2C6B36;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.logo {
+  height: 50px;
+}
+
+.logo img {
+  height: 100%;
+  object-fit: contain;
+}

@@ -4,7 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build"
+    "build": "ng build",
+    "server": "node server/index.js"
   },
   "dependencies": {
     "@angular/animations": "^18.1.0",
@@ -15,6 +16,7 @@
     "@angular/platform-browser": "^18.1.0",
     "@angular/router": "^18.1.0",
     "rxjs": "^7.8.1",
+    "socket.io-client": "^4.8.1",
     "tslib": "^2.5.0",
     "zone.js": "~0.14.0"
   },
@@ -22,6 +24,8 @@
     "@angular-devkit/build-angular": "^18.1.0",
     "@angular/cli": "^18.1.0",
     "@angular/compiler-cli": "^18.1.0",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
     "typescript": "~5.5.0"
   }
 }

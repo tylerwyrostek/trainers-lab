@@ -1,20 +1,15 @@
 <div class="page-container">
-    <nav class="navbar">
-      <div class="logo">
-        <img src="https://placehold.co/200x50" alt="Logo">
-      </div>
-    </nav>
 
     <div class="content">
       <div class="buttons-container">
-        <button class="action-button" (click)="openQueueModal('casual')">
-          Casual Queue
+        <button class="action-button casual" (click)="openQueueModal('casual')">
+          <span class ="button-text">Casual Queue</span> 
         </button>
-        <button class="action-button" (click)="openQueueModal('ranked')">
-          Ranked Queue
+        <button class="action-button ranked" (click)="openQueueModal('ranked')">
+            <span class ="button-text">Ranked Queue</span> 
         </button>
-        <button class="action-button" (click)="navigateToCreateRoom()">
-          Create Room
+        <button class="action-button create-room" (click)="navigateToCreateRoom()">
+            <span class ="button-text">Create Room</span> 
         </button>
       </div>
     </div>

@@ -17,6 +17,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   localStreamExpanded = false;
   showSettings = false;
 
+
   constructor(private mediaService: MediaService) {
     this.mediaService.localStream$.subscribe(
       stream => this.localStream = stream
@@ -28,10 +29,12 @@ export class LobbyComponent implements OnInit, OnDestroy {
       this.audioDevices = devices.filter(d => d.kind === 'audioinput');
       this.videoDevices = devices.filter(d => d.kind === 'videoinput');
     });
+
   }
 
   async ngOnInit() {
     await this.mediaService.initializeMedia();
+    this.mediaService.leaveQueue();
   }
 
   async onAudioDeviceChange(event: Event) {

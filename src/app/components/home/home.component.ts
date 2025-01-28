@@ -1,8 +1,8 @@
+import { MediaService } from './../../services/media.service';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { QueueService } from '../../services/queue.service';
 
 export enum GameFormat {
   STANDARD = 'Standard',
@@ -22,21 +22,35 @@ export class HomeComponent {
   showQueueModal = false;
   queueType: 'casual' | 'ranked' | null = null;
 
+  isInQueue = false;
+  isMatched = false;
+
   constructor(
     private router: Router,
-    private queueService: QueueService
-  ) {}
+    private mediaService: MediaService
+  ) {
+    this.mediaService.isInQueue.subscribe(
+      inQueue => this.isInQueue = inQueue
+    );
+    this.mediaService.isMatched.subscribe(
+      matched => {
+        this.isMatched = matched;
+        if(this.isMatched) this.router.navigate(['/lobby']);
+        
+      }
+    );
+  }
 
   openQueueModal(type: 'casual' | 'ranked') {
     this.queueType = type;
     this.showQueueModal = true;
-    this.queueService.enterQueue(type);
+    this.mediaService.enterQueue();
   }
 
   cancelQueue() {
     this.showQueueModal = false;
     this.queueType = null;
-    this.queueService.leaveQueue();
+    this.mediaService.leaveQueue();
   }
 
   navigateToCreateRoom() {
