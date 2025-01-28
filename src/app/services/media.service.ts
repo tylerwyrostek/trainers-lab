@@ -76,7 +76,7 @@ export class MediaService {
       });
 
       this.localStream.next(stream);
-      await this.updatePeerConnection();
+      await this.setupPeerConnection();
     } catch (error) {
       console.error('Error accessing media devices:', error);
       throw error;
