@@ -76,6 +76,7 @@ export class MediaService {
       });
 
       this.localStream.next(stream);
+      await this.updatePeerConnection();
     } catch (error) {
       console.error('Error accessing media devices:', error);
       throw error;
@@ -128,6 +129,8 @@ export class MediaService {
   }
 
   private async setupPeerConnection(): Promise<void> {
+    console.log(this.peerConnection);
+    console.log(this.currentMatchId);
     if (this.peerConnection) {
       this.peerConnection.close();
     }
@@ -174,7 +177,7 @@ export class MediaService {
     await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
     const answer = await this.peerConnection.createAnswer();
     await this.peerConnection.setLocalDescription(answer);
-    
+    console.log(this.currentMatchId);
     if (this.currentMatchId) {
       this.socket.emit('answer', {
         matchId: this.currentMatchId,
@@ -229,7 +232,7 @@ export class MediaService {
       this.isInQueue.next(false);
       this.isMatched.next(true);
 
-      await this.setupPeerConnection();
+      await this.startLocalStream();
       
       if (initiator) {
         const offer = await this.createOffer();

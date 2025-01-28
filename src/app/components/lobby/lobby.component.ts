@@ -50,22 +50,12 @@ export class LobbyComponent implements OnInit, OnDestroy {
         matched => this.isMatched = matched
       )
     );
-
-    this.startStream();
   }
 
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.mediaService.stopLocalStream();
     this.mediaService.leaveQueue();
-  }
-
-  async startStream() {
-    try {
-      await this.mediaService.startLocalStream();
-    } catch (error) {
-      console.error('Failed to start stream:', error);
-    }
   }
 
   async onAudioDeviceChange(event: Event) {
